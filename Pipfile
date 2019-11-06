@@ -1,0 +1,29 @@
+[[source]]
+name = "pypi"
+url = "https://pypi.org/simple"
+verify_ssl = true
+
+[dev-packages]
+flake8 = "*"
+flake8-docstrings = "*"
+flake8-rst-docstrings = "*"
+pylint = "*"
+black = "==19.3b0"
+pre-commit = "*"
+jupytext = "*"
+
+[packages]
+h5py = "*"
+numpy = "*"
+scikit-learn = "*"
+scipy = "*"
+pandas = "*"
+matplotlib = "*"
+keras="==2.2.5"
+jupyter = "*"
+jupyter-contrib-nbextensions = "*"
+tensorflow = "==1.13.1"
+tensorflow-gpu = "==1.13.1"
+
+[requires]
+python_version = "3.6"
