@@ -11,6 +11,7 @@ pylint = "*"
 black = "==19.3b0"
 pre-commit = "*"
 jupytext = "*"
+tensorflow-datasets = "*"
 
 [packages]
 h5py = "*"
@@ -19,11 +20,11 @@ scikit-learn = "*"
 scipy = "*"
 pandas = "*"
 matplotlib = "*"
-keras="==2.2.5"
 jupyter = "*"
 jupyter-contrib-nbextensions = "*"
-tensorflow = "==1.13.1"
-tensorflow-gpu = "==1.13.1"
+tensorflow = "*"
+tensorflow-gpu = "*"
+seaborn = "*"
 
 [requires]
 python_version = "3.6"
