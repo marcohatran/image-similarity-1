@@ -20,34 +20,40 @@ class ImageSimilarityModel:
         input_positive = Input([28, 28, 1], name="input_positive")
         input_negative = Input([28, 28, 1], name="input_negative")
 
-        shared_network = Simple.construct_model([28, 28, 1, 1])
+        shared_network = Simple.construct_model([28, 28, 1])
 
         encoded_anchor = shared_network(input_anchor)
         encoded_positive = shared_network(input_positive)
         encoded_negative = shared_network(input_negative)
 
-        merged_vector = concatenate(
+        merged_embeddings = concatenate(
             [encoded_anchor, encoded_positive, encoded_negative],
             axis=-1,
             name="merged_layer",
         )
 
         self.triplet_model = Model(
-            inputs=[input_anchor, input_positive, input_negative], outputs=merged_vector
+            inputs=[input_anchor, input_positive, input_negative],
+            outputs=merged_embeddings,
+            name="triplet_model",
         )
         self.triplet_model.compile(
-            optimizer=Adam(lr=learning_rate, clipnorm=1.0), loss=triplet_loss
+            optimizer=Adam(lr=learning_rate, beta_1=0.9, beta_2=0.999),
+            loss=triplet_loss,
         )
 
-        self.embedding_model = Model(inputs=input_anchor, outputs=encoded_anchor)
+        self.embedding_model = Model(
+            inputs=input_anchor, outputs=encoded_anchor, name="embedding_model"
+        )
 
     def summary(self):
-        print(self.model.summary())
+        print(self.triplet_model.summary())
+        print()
+        print(self.embedding_model.summary())
 
     def fit(
         self,
         X: np.ndarray,
-        y: np.ndarray,
         epochs: int,
         shuffle: bool,
         batch_size: int,
@@ -64,23 +70,23 @@ class ImageSimilarityModel:
                 mode="min",
             )
         ]
-        self.history = self.model.fit(
+        self.history = self.triplet_model.fit(
             X,
-            y,
+            np.empty((X[0].shape[0], 512)),
             epochs=epochs,
             shuffle=shuffle,
             batch_size=batch_size,
             verbose=verbose,
             validation_split=validation_split,
             validation_data=validation_data,
-            callbacks=callbacks,
+            # callbacks=callbacks,
         )
 
-    def predict(self, X):
+    def predict(self, X: np.ndarray):
         return self.model.predict(X)
 
     def evaluate(self, test_set, verbose=1):
-        pass
+        raise NotImplementedError
 
     def visualize_learning_curves(self, axis):
         axis.set_title("Learning curves")
@@ -104,16 +110,16 @@ class ImageSimilarityModel:
         self.model.load_weights(model_path)
 
 
-def triplet_loss(y_true, y_pred, alpha=0.4):
+def triplet_loss(y_true: np.ndarray, y_pred: np.ndarray, alpha=0.4):
     print("y_pred.shape = ", y_pred.shape)
     total_length = y_pred.shape.as_list()[-1]
 
-    anchor = y_pred[:, 0 : int(total_lenght * 1 / 3)]
-    positive = y_pred[:, int(total_lenght * 1 / 3) : int(total_lenght * 2 / 3)]
-    negative = y_pred[:, int(total_lenght * 2 / 3) : int(total_lenght * 3 / 3)]
+    anchor = y_pred[:, 0 : int(total_length * 1 / 3)]
+    positive = y_pred[:, int(total_length * 1 / 3) : int(total_length * 2 / 3)]
+    negative = y_pred[:, int(total_length * 2 / 3) : int(total_length * 3 / 3)]
 
     pos_dist = K.sum(K.square(anchor - positive), axis=1)
     neg_dist = K.sum(K.square(anchor - negative), axis=1)
 
-    loss = K.maximum(post_dist - neg_dist + alpha, 0.0)
+    loss = K.maximum(pos_dist - neg_dist + alpha, 0.0)
     return loss

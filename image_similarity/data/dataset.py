@@ -5,17 +5,19 @@ from typing import Tuple
 import numpy as np
 from matplotlib.image import imread
 
+from image_similarity.utils import cached_property
+
 
 class Dataset(object):
-    def __init__(self, dataset_path: Path):
-        self.train_images, self.train_labels = None
-        self.test_images, self.test_labels = None
+    def __init__(self, train_images, train_labels, test_images, test_labels: Path):
+        self.train_images, self.train_labels = train_images, train_labels
+        self.test_images, self.test_labels = test_images, test_labels
 
-    @property
+    @cached_property
     def unique_label(self) -> np.ndarray:
         return np.unique(self.train_labels)
 
-    @property
+    @cached_property
     def map_train(self):
         return {
             label: np.flatnonzero(self.train_labels == label)
@@ -31,11 +33,11 @@ class Dataset(object):
             anchor_indices.append(anchor)
             positive_indices.append(positive)
             negative_indices.append(negative)
-        return (
+        return [
             self.train_images[anchor_indices, :],
             self.train_images[positive_indices, :],
             self.train_images[negative_indices, :],
-        )
+        ]
 
     def _get_triplet(self) -> Tuple[int, int, int]:
         label_l, label_r = np.random.choice(self.unique_label, 2, replace=False)
