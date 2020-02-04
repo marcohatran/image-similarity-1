@@ -20,7 +20,6 @@ jupyter:
 ```
 
 ```{python}
-from tensorflow.keras.datasets import mnist
 import matplotlib.pyplot as plt 
 
 from image_similarity import data, models, utils
@@ -31,14 +30,24 @@ from image_similarity import data, models, utils
 ```
 
 ```{python}
-(x_train, y_train), (x_test, y_test) = mnist.load_data()
-x_train = x_train.reshape(-1, 28, 28, 1)
-x_test = x_test.reshape(-1, 28, 28, 1)
+dataset = data.MnistDataset()
+print(dataset)
 ```
 
 ```{python}
-fig, axis = plt.subplots(1, 1)
-utils.visualize.visualize_tsne(axis, x_train.reshape(-1, 28 * 28)[:512], y_train[:512])
+batch_size = 8
+anchor_images, positive_images, negative_images = dataset.get_triplet_batch(batch_size)
+print(anchor_images.shape, positive_images.shape)
+fig, axes = plt.subplots(batch_size, 3, figsize=(6, 24))
+for idx, (ai, pi, ni) in enumerate(zip(anchor_images, positive_images, negative_images)):
+    axes[idx, 0].imshow(np.squeeze(ai, axis=2))
+    axes[idx, 1].imshow(np.squeeze(pi, axis=2))
+    axes[idx, 2].imshow(np.squeeze(ni, axis=2))
+```
+
+```{python}
+fig, axis = plt.subplots(1, figsize=(12, 12))
+utils.visualize.visualize_tsne_v2(axis, dataset.train_images, dataset.train_labels, 512)
 ```
 
 ```{python}

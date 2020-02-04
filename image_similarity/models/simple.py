@@ -1,3 +1,5 @@
+from typing import List
+
 from tensorflow.keras.layers import (
     Input,
     Conv2D,
@@ -22,7 +24,7 @@ class Simple:
         raise NotImplementedError()
 
     @classmethod
-    def construct_model(self, input_shape):
+    def construct_model(self, input_shape: List[int], embedding_size: int):
         net = Sequential(
             [
                 Conv2D(
@@ -37,7 +39,7 @@ class Simple:
                 Conv2D(256, (5, 5), padding="same", activation="relu", name="conv2"),
                 MaxPooling2D((2, 2), (2, 2), padding="same", name="pool2"),
                 Flatten(name="flatten"),
-                Dense(4, name="embeddings"),
+                Dense(embedding_size, name="embeddings"),
             ]
         )
         return net

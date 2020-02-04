@@ -1,4 +1,4 @@
-from typing import Tuple
+from typing import Tuple, List
 
 import numpy as np
 import tensorflow.keras.backend as K
@@ -15,12 +15,17 @@ class ImageSimilarityModel:
         self.model = None
         self.history = None
 
-    def construct_model(self, learning_rate: float):
-        input_anchor = Input([28, 28, 1], name="input_anchor")
-        input_positive = Input([28, 28, 1], name="input_positive")
-        input_negative = Input([28, 28, 1], name="input_negative")
+    def construct_model(
+        self, input_shape: List[int], embedding_size: int, learning_rate: float
+    ):
+        if len(input_shape) != 3:
+            raise ValueError("`input_shape` must have three dimensions")
 
-        shared_network = Simple.construct_model([28, 28, 1])
+        input_anchor = Input(input_shape, name="input_anchor")
+        input_positive = Input(input_shape, name="input_positive")
+        input_negative = Input(input_shape, name="input_negative")
+
+        shared_network = Simple.construct_model(input_shape, embedding_size)
 
         encoded_anchor = shared_network(input_anchor)
         encoded_positive = shared_network(input_positive)
@@ -72,7 +77,7 @@ class ImageSimilarityModel:
         ]
         self.history = self.triplet_model.fit(
             X,
-            np.empty((X[0].shape[0], 512)),
+            np.empty((X[0].shape[0], embedding_size * 3)),
             epochs=epochs,
             shuffle=shuffle,
             batch_size=batch_size,

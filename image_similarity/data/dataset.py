@@ -9,9 +9,10 @@ from image_similarity.utils import cached_property
 
 
 class Dataset(object):
-    def __init__(self, train_images, train_labels, test_images, test_labels: Path):
-        self.train_images, self.train_labels = train_images, train_labels
-        self.test_images, self.test_labels = test_images, test_labels
+    train_images = np.array([])
+    train_labels = np.array([])
+    test_images = np.array([])
+    test_labels = np.array([])
 
     @cached_property
     def unique_label(self) -> np.ndarray:
@@ -34,9 +35,9 @@ class Dataset(object):
             positive_indices.append(positive)
             negative_indices.append(negative)
         return [
-            self.train_images[anchor_indices, :],
-            self.train_images[positive_indices, :],
-            self.train_images[negative_indices, :],
+            self.train_images[anchor_indices],
+            self.train_images[positive_indices],
+            self.train_images[negative_indices],
         ]
 
     def _get_triplet(self) -> Tuple[int, int, int]:
@@ -45,12 +46,25 @@ class Dataset(object):
         negative = np.random.choice(self.map_train[label_r])
         return anchor, positive, negative
 
+    def __repr__(self):
+        return "\n".join(
+            [
+                f"{self.__class__.__name__}",
+                f"  Train images: {self.train_images.shape}",
+                f"  Train labels: {self.train_labels.shape}",
+                f"  Test images: {self.test_images.shape}",
+                f"  Test labels: {self.test_labels.shape}",
+                f"  Unique labels: {self.unique_label}",
+            ]
+        )
+
 
 class DirectoryDataset(Dataset):
     def __init__(self, dataset_path: Path):
         super().__init__()
 
         images, labels = self._load_dataset(dataset_path)
+        images = images / 255.0
 
     def _load_dataset(self, dataset_path: Path) -> Tuple[np.ndarray, np.ndarray]:
         images = []
@@ -60,14 +74,3 @@ class DirectoryDataset(Dataset):
                 images.append(np.squeeze(np.asarray(imread(image))))
                 labels.append(directory)
         return np.array(images), np.array(labels)
-
-    def _preprocess(self, images: np.ndarray, labels: np.ndarray):
-        images = _normalize(images)
-
-
-def _normalize(image: np.ndarray):
-    # min_value = np.min(array)
-    # max_value = np.max(array)
-    # array = (array - min_value) / (max_value - min_value)
-    image / 255.0
-    return image
